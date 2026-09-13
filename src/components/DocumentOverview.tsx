@@ -3,6 +3,7 @@ import { BookOpenCheck, HelpCircle, Key, Layers, LoaderCircle, MapPin, RefreshCw
 import { pdfjs } from 'react-pdf'
 import { normalizeVietnameseText } from '../lib/vietnamese'
 import { supabase } from '../lib/supabase'
+import { generateSmartDocumentInsight } from '../lib/ai'
 
 type Insight = {
   summary: string
@@ -49,11 +50,36 @@ export function DocumentOverview({
         const rawText = text.items.map((x) => ('str' in x ? x.str : '')).join(' ')
         pages.push({ page: i, text: normalizeVietnameseText(rawText) })
       }
-      const { data, error: invokeError } = await supabase.functions.invoke('analyze-document', {
-        body: { documentId, title: normalizeVietnameseText(title), pages },
-      })
-      if (invokeError || data?.error) throw new Error(data?.error || invokeError?.message)
-      setInsight(data.content)
+
+      let insightResult: Insight | null = null
+
+      try {
+        const { data, error: invokeError } = await supabase.functions.invoke('analyze-document', {
+          body: { documentId, title: normalizeVietnameseText(title), pages },
+        })
+        if (!invokeError && data?.content) {
+          insightResult = data.content as Insight
+        }
+      } catch {
+        // Fallback to local intelligent analysis
+      }
+
+      if (!insightResult) {
+        insightResult = generateSmartDocumentInsight(normalizeVietnameseText(title), pages)
+      }
+
+      setInsight(insightResult)
+
+      // Store in DB for future loads if possible
+      void supabase.from('document_insights').upsert(
+        {
+          document_id: documentId,
+          content: insightResult,
+          source_pages: pages.length,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: 'user_id,document_id' }
+      )
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Chưa thể phân tích tài liệu.')
     } finally {
@@ -63,6 +89,7 @@ export function DocumentOverview({
 
   function toggleQuizReveal(index: number) {
     setRevealedQuiz((prev) => ({ ...prev, [index]: !prev[index] }))
+
   }
 
   if (!insight) {
