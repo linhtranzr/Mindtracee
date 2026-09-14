@@ -123,6 +123,71 @@ function extractKeyPointsFromText(pageText: string, chapterTitle: string, docTit
   ]
 }
 
+function renderHighlightedText(text: string, annotations: Annotation[]) {
+  if (!text || !annotations || annotations.length === 0) return text
+
+  const validHighlights = annotations.filter(
+    (h) => h.selected_text && h.selected_text.trim().length > 2
+  )
+
+  if (validHighlights.length === 0) return text
+
+  let parts: Array<{ text: string; color?: string }> = [{ text }]
+
+  for (const hl of validHighlights) {
+    const snippet = hl.selected_text!.trim()
+    const color = (hl.source_location as { color?: string })?.color || '#FACC15'
+    const nextParts: Array<{ text: string; color?: string }> = []
+
+    for (const part of parts) {
+      if (part.color) {
+        nextParts.push(part)
+        continue
+      }
+
+      const idx = part.text.toLowerCase().indexOf(snippet.toLowerCase())
+      if (idx !== -1) {
+        const before = part.text.slice(0, idx)
+        const match = part.text.slice(idx, idx + snippet.length)
+        const after = part.text.slice(idx + snippet.length)
+
+        if (before) nextParts.push({ text: before })
+        nextParts.push({ text: match, color })
+        if (after) nextParts.push({ text: after })
+      } else {
+        nextParts.push(part)
+      }
+    }
+    parts = nextParts
+  }
+
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.color ? (
+          <mark
+            key={i}
+            style={{
+              background: `${p.color}66`,
+              color: '#000000',
+              borderRadius: '4px',
+              padding: '2px 5px',
+              borderBottom: `2.5px solid ${p.color}`,
+              fontWeight: 600,
+              boxDecorationBreak: 'clone',
+              WebkitBoxDecorationBreak: 'clone',
+            }}
+          >
+            {p.text}
+          </mark>
+        ) : (
+          <span key={i}>{p.text}</span>
+        )
+      )}
+    </>
+  )
+}
+
 function buildSmartDocumentChapters(
   numPages: number,
   cleanTitle: string,
@@ -396,12 +461,41 @@ export function Reader() {
 
   const loadWorkspace = useCallback(async () => {
     if (!documentId) return
+    let localAnn: Annotation[] = []
+
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem(`mindtrace_annotations_${documentId}`)
+      if (stored) {
+        try {
+          localAnn = JSON.parse(stored) as Annotation[]
+        } catch {
+          // ignore
+        }
+      }
+    }
+
     const { data } = await supabase
       .from('annotations')
       .select('id,kind,note,selected_text,source_location,created_at')
       .eq('document_id', documentId)
       .order('created_at', { ascending: false })
-    setAnnotations((data || []) as Annotation[])
+
+    const dbAnn = (data || []) as Annotation[]
+
+    const map = new Map<string, Annotation>()
+    localAnn.forEach((a) => {
+      if (a.id || a.selected_text) map.set(a.id || a.selected_text!, a)
+    })
+    dbAnn.forEach((a) => {
+      if (a.id || a.selected_text) map.set(a.id || a.selected_text!, a)
+    })
+
+    const combined = Array.from(map.values())
+    setAnnotations(combined)
+
+    if (typeof localStorage !== 'undefined' && combined.length > 0) {
+      localStorage.setItem(`mindtrace_annotations_${documentId}`, JSON.stringify(combined))
+    }
   }, [documentId])
 
   useEffect(() => {
@@ -582,7 +676,7 @@ export function Reader() {
     setSaving(true)
     setError('')
 
-    const highlightTextToSave = selectedText
+    const highlightTextToSave = selectedText.trim()
     const newHighlight: Annotation = {
       id: `hl-${Date.now()}`,
       kind: 'highlight',
@@ -592,7 +686,12 @@ export function Reader() {
       created_at: new Date().toISOString(),
     }
 
-    setAnnotations((prev) => [newHighlight, ...prev])
+    const updated = [newHighlight, ...annotations]
+    setAnnotations(updated)
+
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(`mindtrace_annotations_${documentId}`, JSON.stringify(updated))
+    }
 
     const { error: saveError } = await supabase.from('annotations').insert({
       document_id: documentId,
@@ -607,7 +706,6 @@ export function Reader() {
 
     setSelectedText('')
     window.getSelection()?.removeAllRanges()
-    await loadWorkspace()
   }
 
   async function handleInlineAskAi(query?: string) {
@@ -999,7 +1097,7 @@ export function Reader() {
                   .slice(0, 4)
                   .map((pGroup, pIdx) => (
                     <p key={pIdx} className={pIdx === 0 ? 'drop-cap-paragraph' : ''} style={{ margin: pIdx === 0 ? 0 : '16px 0 0' }}>
-                      {pGroup.join(' ')}
+                      {renderHighlightedText(pGroup.join(' '), annotations)}
                     </p>
                   ))
               ) : (
@@ -1019,7 +1117,7 @@ export function Reader() {
                   </span>
                 </div>
                 <p style={{ fontFamily: 'var(--font-sans)', fontSize: '14px', lineHeight: 1.6, color: '#444650', margin: '0 0 14px' }}>
-                  {activeChapter.summary}
+                  {renderHighlightedText(activeChapter.summary || '', annotations)}
                 </p>
                 {activeChapter.keyPoints && activeChapter.keyPoints.length > 0 && (
                   <div style={{ background: '#FFFFFF', border: '1px solid var(--border-solid)', borderRadius: '8px', padding: '12px 14px' }}>
@@ -1028,7 +1126,9 @@ export function Reader() {
                     </span>
                     <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '13px', color: '#1A1C1B', lineHeight: 1.6 }}>
                       {activeChapter.keyPoints.map((pt, idx) => (
-                        <li key={idx} style={{ marginBottom: '4px' }}>{pt}</li>
+                        <li key={idx} style={{ marginBottom: '4px' }}>
+                          {renderHighlightedText(pt, annotations)}
+                        </li>
                       ))}
                     </ul>
                   </div>
@@ -1181,15 +1281,21 @@ export function Reader() {
                     ].map((item) => (
                       <button
                         key={item.color}
-                        onClick={() => void handleHighlightText(item.color)}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onPointerDown={(e) => e.preventDefault()}
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          void handleHighlightText(item.color)
+                        }}
                         style={{
-                          width: '24px',
-                          height: '24px',
+                          width: '26px',
+                          height: '26px',
                           borderRadius: '50%',
                           background: item.color,
                           border: '2px solid #FFFFFF',
                           cursor: 'pointer',
-                          boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
                           transition: 'transform 0.15s ease'
                         }}
                         title={`Tô màu ${item.label}`}
