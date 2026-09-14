@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MindTrace v2 — Slide Thuyết Trình Dự Án</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #07090e;
+      --bg-card: rgba(18, 24, 38, 0.75);
+      --border-card: rgba(0, 240, 255, 0.15);
+      --primary: #00F0FF;
+      --accent: #FFB800;
+      --accent-green: #00E676;
+      --text-main: #F0F4F8;
+      --text-sub: #94A3B8;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(0, 240, 255, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(255, 184, 0, 0.06) 0%, transparent 40%);
+    }
+
+    /* Presentation Canvas Frame */
+    .deck-container {
+      width: 92vw;
+      max-width: 1280px;
+      height: 82vh;
+      max-height: 720px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(0, 240, 255, 0.05);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Slide Item */
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 48px 56px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(0.98) translateY(10px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+      transform: scale(1) translateY(0);
+    }
+
+    /* Slide Header */
+    .slide-tag {
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .slide-tag::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    .slide-title {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #FFF;
+      margin-bottom: 24px;
+      line-height: 1.25;
+      background: linear-gradient(135deg, #FFFFFF 30%, var(--text-sub) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      overflow-y: auto;
+    }
+
+    /* Layout Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* Cards */
+    .info-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 20px 24px;
+      transition: all 0.3s ease;
+    }
+    .info-card:hover {
+      border-color: rgba(0, 240, 255, 0.3);
+      background: rgba(0, 240, 255, 0.03);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title.gold { color: var(--accent); }
+    .card-title.green { color: var(--accent-green); }
+
+    .card-body {
+      font-size: 0.95rem;
+      color: var(--text-sub);
+      line-height: 1.6;
+    }
+
+    .card-body ul {
+      list-style-type: none;
+    }
+
+    .card-body li {
+      margin-bottom: 8px;
+      position: relative;
+      padding-left: 18px;
+    }
+    .card-body li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    /* Hero Slide Specifics */
+    .hero-slide {
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-logo-box {
+      width: 90px;
+      height: 90px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(0, 240, 255, 0.2), rgba(255, 184, 0, 0.1));
+      border: 1px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      box-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
+    }
+    .hero-title {
+      font-family: var(--font-heading);
+      font-size: 3.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #FFFFFF 0%, var(--primary) 60%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-sub);
+      max-width: 680px;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .badge-group {
+      display: flex;
+      gap: 12px;
+    }
+    .badge {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    /* Diagram Block */
+    .tech-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+    }
+    .diagram-root {
+      background: linear-gradient(90deg, rgba(0, 240, 255, 0.15), rgba(255, 184, 0, 0.15));
+      border: 1px solid var(--primary);
+      padding: 14px;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #FFF;
+    }
+    .diagram-branches {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+    .diagram-node {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .diagram-node strong {
+      display: block;
+      color: var(--primary);
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    /* Table Styling */
+    .table-container {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .table-container th {
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--primary);
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+    }
+    .table-container td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--text-sub);
+    }
+    .table-container tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-main);
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: rgba(0, 230, 118, 0.15);
+      color: var(--accent-green);
+    }
+
+    /* UI Mockup Screen (Slide 8) */
+    .mockup-window {
+      background: #0d1117;
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 16px;
+      height: 380px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+    .mockup-main {
+      flex: 1;
+      background: #161b22;
+      border-radius: 12px;
+      padding: 20px;
+      overflow-y: auto;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .mockup-sidebar {
+      width: 320px;
+      background: #161b22;
+      border-radius: 12px;
+      padding: 16px;
+      border: 1px solid rgba(0, 240, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Footer & Navigation Controls */
+    .deck-footer {
+      height: 64px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      background: rgba(10, 14, 23, 0.9);
+    }
+    .slide-counter {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+    .nav-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-nav {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-main);
+      padding: 8px 18px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-nav:hover:not(:disabled) {
+      background: var(--primary);
+      color: #000;
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.4);
+    }
+    .btn-nav:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-container">
+
+    <!-- SLIDE 1: TRANG BÌA -->
+    <div class="slide hero-slide active" id="slide-1">
+      <div class="hero-logo-box">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+          <path d="M12 6v6l4 2"/>
+        </svg>
+      </div>
+      <h1 class="hero-title">MindTrace v2</h1>
+      <p class="hero-subtitle">Nền tảng Đọc Chuyên Sâu & Tái Cấu Trúc Tri Thức Bằng Trợ Lý AI Thông Minh</p>
+      <div class="badge-group">
+        <span class="badge">Active Recall</span>
+        <span class="badge">Contextual AI</span>
+        <span class="badge">Fail-Proof PDF Reader</span>
+        <span class="badge">Vite + React 19</span>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: ĐẶT VẤN ĐỀ & MỤC ĐÍCH -->
+    <div class="slide" id="slide-2">
+      <div class="slide-tag">Thực Trạng & Giải Pháp</div>
+      <h2 class="slide-title">Đặt Vấn Đề & Mục Đích Dự Án</h2>
+      <div class="slide-content grid-2">
+        <div class="info-card">
+          <div class="card-title gold">❌ Thực Trạng Đọc Thụ Động</div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Nhanh quên kiến thức:</strong> Độc giả quên tới 80% nội dung sách/PDF sau 24h nếu không ôn tập.</li>
+              <li><strong>Rào cản thuật ngữ:</strong> Các câu văn học thuật/tài chính phức tạp gây đứt quãng dòng tập trung.</li>
+              <li><strong>Tài liệu tĩnh thiếu tương tác:</strong> File PDF truyền thống không thể giải thích ngữ cảnh hoặc đặt câu hỏi chủ động.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="card-title green">🎯 Sứ Mệnh MindTrace v2</div>
+          <div class="card-body">
+            <ul>
+              <li><strong>Không Gian Học Tập Tương Tác:</strong> Biến file PDF tĩnh thành trải nghiệm đọc chủ động.</li>
+              <li><strong>AI Giải Thích Ngữ Cảnh:</strong> Tự động làm rõ bản chất đoạn văn bôi đen và đúc kết bài học thực tế.</li>
+              <li><strong>Kích Thích Active Recall:</strong> Tạo câu hỏi hồi tưởng mở để khắc sâu tri thức dài hạn.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: Ý TƯỞNG CỐT LÕI & UX -->
+    <div class="slide" id="slide-3">
+      <div class="slide-tag">Định Hướng Trải Nghiệm</div>
+      <h2 class="slide-title">Ý Tưởng Cốt Lõi & Phân Loại Độc Giả</h2>
+      <div class="slide-content grid-3">
+        <div class="info-card">
+          <div class="card-title">🎓 Nhóm GenZ / Sinh Viên</div>
+          <div class="card-body">
+            <p style="margin-bottom: 8px;">Cần trải nghiệm trực quan, yên tĩnh, phản hồi tức thì và câu hỏi tự kiểm tra ngắn gọn.</p>
+            <span class="status-badge">Tự Ôn Tập Nhanh</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="card-title gold">💼 Khối Bận Rộn / DeepWork</div>
+          <div class="card-body">
+            <p style="margin-bottom: 8px;">Cần không gian làm việc tập trung cao độ, loại bỏ xao nhãng và trích xuất bài học cốt lõi.</p>
+            <span class="status-badge" style="background:rgba(255,184,0,0.15); color:var(--accent);">Tập Trung Cao Độ</span>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="card-title green">⚡ Trải Nghiệm Mượt Mà</div>
+          <div class="card-body">
+            <p style="margin-bottom: 8px;">Cho phép dùng thử & khám phá mẫu ngay lập tức, xác thực tài khoản tự động khi tương tác sâu.</p>
+            <span class="status-badge">UX Thân Thiện</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: TÍNH NĂNG ĐỘT PHÁ -->
+    <div class="slide" id="slide-4">
+      <div class="slide-tag">Công Năng Sản Phẩm</div>
+      <h2 class="slide-title">5 Tính Năng Đột Phá Trên MindTrace v2</h2>
+      <div class="slide-content grid-2">
+        <div class="info-card">
+          <div class="card-title">1. Trình Đọc PDF Fail-Proof</div>
+          <div class="card-body">Tự động lưu cache tệp Blob vào IndexedDB local, đọc mượt mà ngay cả khi mất kết nối mạng.</div>
+        </div>
+        <div class="info-card">
+          <div class="card-title gold">2. AI Phân Tích Ngữ Cảnh Động</div>
+          <div class="card-body">Bôi đen văn bản để AI giải thích bản chất thực tế, đúc kết 2 bài học và đặt 1 câu hỏi Active Recall.</div>
+        </div>
+        <div class="info-card">
+          <div class="card-title green">3. Phân Tích Tổng Quan Bài Học</div>
+          <div class="card-body">Tự động trích xuất Tóm tắt, Ý chính kèm số trang, Thuật ngữ và Quiz tự kiểm tra ghi nhớ.</div>
+        </div>
+        <div class="info-card">
+          <div class="card-title">4. Ink Canvas & Highlight</div>
+          <div class="card-body">Hỗ trợ vẽ tay, tô màu và đánh dấu trực tiếp trên các trang PDF với đa dạng màu sắc.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: KIẾN TRÚC CÔNG NGHỆ -->
+    <div class="slide" id="slide-5">
+      <div class="slide-tag">Kiến Trúc Công Nghệ</div>
+      <h2 class="slide-title">Tech Stack Chi Tiết (Diễn Giải Tiếng Việt)</h2>
+      <div class="slide-content">
+        <div class="tech-diagram">
+          <div class="diagram-root">NỀN TẢNG ỨNG DỤNG WEB MINDTRACE V2</div>
+          <div class="diagram-branches">
+            <div class="diagram-node">
+              <strong>Giao Diện Người Dùng</strong>
+              React 19 + Vite 7 + TypeScript 5
+            </div>
+            <div class="diagram-node">
+              <strong>Thiết Kế Aesthetic</strong>
+              Glassmorphism + Dark Mode HSL
+            </div>
+            <div class="diagram-node">
+              <strong>Bộ Nhớ & Dữ Liệu</strong>
+              IndexedDB Local + Supabase DB
+            </div>
+            <div class="diagram-node">
+              <strong>Trợ Lý AI & NLP</strong>
+              Groq Llama-3.3 70B + NLP Dynamic
+            </div>
+            <div class="diagram-node">
+              <strong>Đổi Mới & Deploy</strong>
+              Vercel Cloud + GitHub CI/CD
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: HÀNH TRÌNH PHÁT TRIỂN -->
+    <div class="slide" id="slide-6">
+      <div class="slide-tag">Quy Trình Phát Triển</div>
+      <h2 class="slide-title">5 Giai Đoạn Nâng Cấp Sản Phẩm</h2>
+      <div class="slide-content grid-2">
+        <div class="info-card">
+          <div class="card-title">Giai đoạn 1 & 2: Nền Tảng & Bảo Mật</div>
+          <div class="card-body">Khởi tạo kiến trúc Vite React, cấu hình Design Tokens Glassmorphic và thiết lập 10 bảng Supabase kèm RLS Policies.</div>
+        </div>
+        <div class="info-card">
+          <div class="card-title gold">Giai đoạn 3 & 4: Trình Đọc & AI Thích Ứng</div>
+          <div class="card-body">Tích hợp Trình Đọc PDF, Ink Canvas vẽ tay, và nâng cấp bộ máy AI phân thích theo từng ngành nghề (Tài chính, Tech, Tâm lý).</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: TROUBLESHOOTING & XỬ LÝ LỖI -->
+    <div class="slide" id="slide-7">
+      <div class="slide-tag">Kỹ Thuật & Xử Lý Sự Cố</div>
+      <h2 class="slide-title">Các Lỗi Gặp Phải & Giải Pháp Thực Tế</h2>
+      <div class="slide-content">
+        <table class="table-container">
+          <thead>
+            <tr>
+              <th>Sự Cố Kỹ Thuật</th>
+              <th>Nguyên Nhân Gốc (Root Cause)</th>
+              <th>Giải Pháp Triệt Để</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong style="color:#FF5252;">Báo lỗi "Không tìm thấy tài liệu"</strong></td>
+              <td>Database chưa chạy SQL migration hoặc chưa upload file.</td>
+              <td>Tạo cơ chế <strong>Multi-layer Fallback</strong>: Lưu tệp Blob vào IndexedDB local + localStorage.</td>
+            </tr>
+            <tr>
+              <td><strong style="color:#FF5252;">Đăng nhập Supabase bị ngắt trang</strong></td>
+              <td>Mặc định Supabase yêu cầu xác nhận Email trước khi vô.</td>
+              <td>Cấu hình <strong>Local Demo Session Fallback</strong> trong AuthProvider để truy cập mượt mà.</td>
+            </tr>
+            <tr>
+              <td><strong style="color:#FF5252;">AI phản hồi văn bản mẫu rập khuôn</strong></td>
+              <td>AI Fallback cũ chứa văn bản cố định về sáng tạo content.</td>
+              <td>Xây dựng lại <strong>Semantic NLP Engine</strong>: Tự động phân loại rủi ro tài chính, công nghệ, tư duy.</td>
+            </tr>
+            <tr>
+              <td><strong style="color:#FF5252;">Lỗi 404 khi Refresh trên Vercel</strong></td>
+              <td>Single Page Application bị Vercel hiểu nhầm đường dẫn.</td>
+              <td>Thêm file <code>vercel.json</code> rewrite toàn bộ đường dẫn <code>/(.*)</code> về <code>/index.html</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- SLIDE 8: DEMO GIAO DIỆN THỰC TẾ -->
+    <div class="slide" id="slide-8">
+      <div class="slide-tag">Minh Họa Trực Quan</div>
+      <h2 class="slide-title">Demo Trực Tiếp Giao Diện Web Thật</h2>
+      <div class="slide-content">
+        <div class="mockup-window">
+          <div class="mockup-main">
+            <h4 style="color:var(--primary); margin-bottom:12px;">📄 RISK DISCLAIMER — Trading Hub 4.0</h4>
+            <p style="background:rgba(255,184,0,0.15); border-left:3px solid var(--accent); padding:10px; font-size:0.9rem; line-height:1.5;">
+              "Forex, options, futures, spread betting, cryptocurrencies, and CFDs are intricate instruments that entail a significant risk of rapid financial loss due to leverage and market volatility."
+            </p>
+          </div>
+          <div class="mockup-sidebar">
+            <div style="font-weight:700; color:var(--primary); font-size:0.9rem;">⚡ Phân Tích Ngữ Cảnh Tài Chính</div>
+            <p style="font-size:0.8rem; color:var(--text-sub); line-height:1.4;">
+              Đoạn trích cảnh báo về mức độ rủi ro cao khi lạm dụng đòn bẩy tài chính trong giao dịch các sản phẩm biến động mạnh.
+            </p>
+            <div style="font-size:0.75rem; background:rgba(0,240,255,0.08); padding:8px; border-radius:6px; border:1px solid rgba(0,240,255,0.2);">
+              <strong>❓ Active Recall:</strong> Bạn sẽ áp dụng quy tắc quản trị vốn như thế nào để phòng ngừa rủi ro đòn bẩy này?
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9: TRIỂN KHAI CLOUD VERCEL -->
+    <div class="slide" id="slide-9">
+      <div class="slide-tag">CI/CD & Cloud Deployment</div>
+      <h2 class="slide-title">Quy Trình Triển Khai Lên Vercel Cloud</h2>
+      <div class="slide-content grid-2">
+        <div class="info-card">
+          <div class="card-title">1. Quản Lý Mã Nguồn Git & GitHub</div>
+          <div class="card-body">
+            Khởi tạo Git local, đóng gói commit sạch và đẩy toàn bộ mã nguồn lên GitHub repository: <code>linhtranzr/Mindtracee</code>.
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="card-title gold">2. Tự Động Hóa Vercel Deployment</div>
+          <div class="card-body">
+            Kết nối GitHub với Vercel Cloud, cấu hình Biến Môi Trường (<code>VITE_SUPABASE_URL</code>) và tự động re-deploy mỗi khi push code.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10: TỔNG KẾT & TẦM NHÌN -->
+    <div class="slide" id="slide-10">
+      <div class="slide-tag">Thành Tựu & Định Hướng</div>
+      <h2 class="slide-title">Tổng Kết & Kế Hoạch Tương Lai</h2>
+      <div class="slide-content grid-2">
+        <div class="info-card">
+          <div class="card-title green">🏆 Thành Tựu Đạt Được</div>
+          <div class="card-body">
+            <ul>
+              <li>Vượt qua <strong>31 / 31 Unit Tests</strong> và 0 lỗi TypeScript compiler.</li>
+              <li>Giao diện Glassmorphism mượt mà, phản hồi tức thì.</li>
+              <li>Bộ máy AI thích ứng chính xác theo từng ngành nghề.</li>
+            </ul>
+          </div>
+        </div>
+        <div class="info-card">
+          <div class="card-title gold">🚀 Định Hướng Phát Triển</div>
+          <div class="card-body">
+            <ul>
+              <li>Tích hợp RAG AI (Tìm kiếm ngữ nghĩa đa tài liệu).</li>
+              <li>Đồng bộ thẻ ghi nhớ Active Recall sang Notion & Anki.</li>
+              <li>Phát triển phiên bản Ứng dụng Mobile PWA.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FOOTER CONTROLS -->
+    <div class="deck-footer">
+      <div class="slide-counter" id="slide-counter">Slide 1 / 10</div>
+      <div class="nav-buttons">
+        <button class="btn-nav" id="btn-prev" onclick="changeSlide(-1)" disabled>Trang Trước</button>
+        <button class="btn-nav" id="btn-next" onclick="changeSlide(1)">Trang Sau</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    function changeSlide(direction) {
+      const nextSlide = currentSlide + direction;
+      if (nextSlide >= 1 && nextSlide <= totalSlides) {
+        document.getElementById(`slide-${currentSlide}`).classList.remove('active');
+        currentSlide = nextSlide;
+        document.getElementById(`slide-${currentSlide}`).classList.add('active');
+        updateControls();
+      }
+    }
+
+    function updateControls() {
+      document.getElementById('slide-counter').innerText = `Slide ${currentSlide} / ${totalSlides}`;
+      document.getElementById('btn-prev').disabled = currentSlide === 1;
+      document.getElementById('btn-next').disabled = currentSlide === totalSlides;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+        changeSlide(1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        changeSlide(-1);
+      }
+    });
+  </script>
+</body>
+</html>
