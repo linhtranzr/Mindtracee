@@ -227,6 +227,66 @@
       font-weight: bold;
     }
 
+    /* Feature List items for Slide 4 */
+    .feature-container {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .feature-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.25s ease;
+    }
+    .feature-item:hover {
+      background: rgba(0, 240, 255, 0.05);
+      border-color: rgba(0, 240, 255, 0.3);
+      transform: translateX(4px);
+    }
+    .feature-num {
+      font-family: var(--font-heading);
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--primary);
+      background: rgba(0, 240, 255, 0.12);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      padding: 3px 8px;
+      border-radius: 8px;
+      min-width: 36px;
+      text-align: center;
+    }
+    .feature-num.gold { color: var(--accent); background: rgba(255, 184, 0, 0.12); border-color: rgba(255, 184, 0, 0.3); }
+    .feature-num.green { color: var(--accent-green); background: rgba(0, 230, 118, 0.12); border-color: rgba(0, 230, 118, 0.3); }
+    .feature-num.purple { color: #D500F9; background: rgba(213, 0, 249, 0.12); border-color: rgba(213, 0, 249, 0.3); }
+    .feature-num.cyan { color: #00E5FF; background: rgba(0, 229, 255, 0.12); border-color: rgba(0, 229, 255, 0.3); }
+
+    .feature-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .feature-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #FFF;
+      line-height: 1.25;
+    }
+    .feature-title.gold { color: var(--accent); }
+    .feature-title.green { color: var(--accent-green); }
+    .feature-title.purple { color: #E040FB; }
+    .feature-title.cyan { color: #18FFFF; }
+
+    .feature-desc {
+      font-size: 0.78rem;
+      color: var(--text-sub);
+      line-height: 1.3;
+      margin-top: 1px;
+    }
+
     /* Hero Slide Specifics */
     .hero-container {
       display: grid;
@@ -505,7 +565,7 @@
         </div>
       </div>
 
-      <!-- SLIDE 3: Ý TƯỞNG CỐT LÕI & TRANG ĐĂNG NHẬP THẬT (demo_login.png) -->
+      <!-- SLIDE 3: Ý TƯỞNG CỐT LÕI & TRANG ĐĂNG NHẬP THẬT -->
       <div class="slide" id="slide-3">
         <div class="slide-tag">Định Hướng Trải Nghiệm & Đăng Nhập</div>
         <h2 class="slide-title">Ý Tưởng Cốt Lõi & Phân Loại Độc Giả Thật</h2>
@@ -528,24 +588,51 @@
         </div>
       </div>
 
-      <!-- SLIDE 4: TÍNH NĂNG ĐỘT PHÁ & TRI THỨC CANVAS (demo_canvas.png) -->
+      <!-- SLIDE 4: TẤT CẢ 5 TÍNH NĂNG ĐỘT PHÁ -->
       <div class="slide" id="slide-4">
         <div class="slide-tag">Công Năng Sản Phẩm & Tri Thức</div>
-        <h2 class="slide-title">5 Tính Năng Đột Phá & Bảng Tri Thức Real</h2>
-        <div class="slide-content grid-2">
-          <div class="image-card">
-            <img src="./demo_canvas.png?v=3" alt="Giao diện Bản Đồ Tri Thức & Kiểm Chứng Minh Bạch Thật" onclick="openModal(this.src)">
+        <h2 class="slide-title">5 Tính Năng Đột Phá Trên MindTrace v2</h2>
+        <div class="slide-content grid-2" style="align-items: center; gap: 20px;">
+          <div class="image-card" style="max-height: 380px;">
+            <img src="./demo_canvas.png?v=3" alt="Giao diện Bản Đồ Tri Thức & Nhật Ký Khảo Chứng" onclick="openModal(this.src)" style="max-height: 335px; object-fit: cover;">
             <div class="image-caption">Ảnh chụp giao diện thật: Nhật Ký Khảo Chứng & Bản Đồ Tri Thức</div>
           </div>
-          <div class="info-card" style="display:flex; flex-direction:column; justify-content:center;">
-            <div class="card-title">1. Trình Đọc PDF Fail-Proof</div>
-            <p class="card-body" style="margin-bottom:10px;">Lưu cache Blob IndexedDB local, đọc mượt màng ngay cả khi mất mạng.</p>
-
-            <div class="card-title gold">2. AI Phân Tích Ngữ Cảnh Động</div>
-            <p class="card-body" style="margin-bottom:10px;">Bôi đen câu văn để AI giải thích bản chất thực tế & đúc kết bài học.</p>
-
-            <div class="card-title green">3. Nhật Ký Khảo Chứng Tri Thức</div>
-            <p class="card-body">Hệ thống hóa tiến trình hình thành khái niệm, theo dõi chu kỳ ôn tập Active Recall.</p>
+          <div class="feature-container">
+            <div class="feature-item">
+              <span class="feature-num">01</span>
+              <div class="feature-text">
+                <div class="feature-title">Trình Đọc PDF Fail-Proof (Local Cache)</div>
+                <div class="feature-desc">Lưu cache Blob IndexedDB local, mở file tức thì, đọc mượt ngay cả khi ngắt mạng.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-num gold">02</span>
+              <div class="feature-text">
+                <div class="feature-title gold">AI Phân Tích Ngữ Cảnh Động</div>
+                <div class="feature-desc">Bôi đen câu văn bất kỳ để AI giải thích bản chất thực tế & đúc kết bài học.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-num green">03</span>
+              <div class="feature-text">
+                <div class="feature-title green">Tổng Quan Bài Học Tự Động</div>
+                <div class="feature-desc">Tự trích xuất Tóm tắt, Ý chính kèm số trang trích dẫn & bộ Quiz Active Recall.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-num purple">04</span>
+              <div class="feature-text">
+                <div class="feature-title purple">Ink Canvas & Highlight Vẽ Tay</div>
+                <div class="feature-desc">Vẽ nét bút mực, ghi chú trực quan, tô màu và lưu tọa độ chính xác trên PDF.</div>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-num cyan">05</span>
+              <div class="feature-text">
+                <div class="feature-title cyan">Nhật Ký Khảo Chứng Tri Thức</div>
+                <div class="feature-desc">Hệ thống hóa tiến trình hình thành khái niệm & theo dõi chu kỳ ôn tập Active Recall.</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
