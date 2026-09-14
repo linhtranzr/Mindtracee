@@ -17,6 +17,7 @@ import {
   LoaderCircle,
   Minus,
   NotebookPen,
+  Pencil,
   Plus,
   RotateCcw,
   Save,
@@ -24,6 +25,7 @@ import {
   Tag,
   Trash2,
   X,
+  Check,
 } from 'lucide-react'
 import { Document, Page, pdfjs } from 'react-pdf'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
@@ -66,6 +68,33 @@ export type TocItem = {
   summary?: string
   keyPoints?: string[]
   status?: KnowledgeStatus
+}
+
+function getInitialConceptTags(docTitle: string, documentId?: string): string[] {
+  if (documentId && typeof localStorage !== 'undefined') {
+    const stored = localStorage.getItem(`mindtrace_tags_${documentId}`)
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  const lower = (docTitle || '').toLowerCase()
+  if (lower.includes('risk') || lower.includes('rủi ro') || lower.includes('trading') || lower.includes('forex') || lower.includes('tài chính')) {
+    return ['Rủi ro đòn bẩy', 'Quản trị vốn', 'Biến động thị trường', 'Tuyên bố rủi ro', 'Tâm lý giao dịch']
+  }
+  if (lower.includes('code') || lower.includes('dev') || lower.includes('phát triển') || lower.includes('thuật toán')) {
+    return ['Kiến trúc hệ thống', 'Refactoring mã', 'Tối ưu luồng dữ liệu', 'Xử lý ngoại lệ', 'Khung ứng dụng']
+  }
+  if (lower.includes('content') || lower.includes('facebook') || lower.includes('tiktok')) {
+    return ['Hook 3 giây', 'Thuật toán phân phối', 'Giữ chân người xem', 'A/B Testing', 'Chỉ số ROI']
+  }
+
+  return ['Heuristics', 'Cạn kiệt ý chí', 'Thiên kiến sẵn có', 'Nỗ lực tối thiểu', 'Nhận thức luận']
 }
 
 function extractKeyPointsFromText(pageText: string, chapterTitle: string, docTitle: string): string[] {
@@ -342,6 +371,11 @@ export function Reader() {
   const [inkWidth, setInkWidth] = useState(4)
   const [draftStrokes, setDraftStrokes] = useState<InkStroke[]>([])
 
+  // Concept Tags States
+  const [conceptTags, setConceptTags] = useState<string[]>([])
+  const [editingTags, setEditingTags] = useState(false)
+  const [newTagInput, setNewTagInput] = useState('')
+
   // Groq Key States
   const [groqKeyInput, setGroqKeyInput] = useState(() => localStorage.getItem('mindtrace_groq_api_key') || '')
   const [showGroqKeyModal, setShowGroqKeyModal] = useState(false)
@@ -438,6 +472,7 @@ export function Reader() {
       setDocument(typedRow)
       setPageNumber(typedRow.current_location?.page || 1)
       setFileData(pdfBlob)
+      setConceptTags(getInitialConceptTags(typedRow.title, documentId))
       setLoading(false)
       await loadWorkspace()
     })()
@@ -640,6 +675,30 @@ export function Reader() {
       }
     } catch (err) {
       console.warn('Could not persist topic status:', err)
+    }
+  }
+
+  function handleAddConceptTag() {
+    const trimmed = newTagInput.trim().replace(/^#/, '')
+    if (!trimmed) return
+    if (conceptTags.includes(trimmed)) {
+      setNewTagInput('')
+      return
+    }
+
+    const updated = [...conceptTags, trimmed]
+    setConceptTags(updated)
+    setNewTagInput('')
+    if (documentId && typeof localStorage !== 'undefined') {
+      localStorage.setItem(`mindtrace_tags_${documentId}`, JSON.stringify(updated))
+    }
+  }
+
+  function handleDeleteConceptTag(tagToDelete: string) {
+    const updated = conceptTags.filter((t) => t !== tagToDelete)
+    setConceptTags(updated)
+    if (documentId && typeof localStorage !== 'undefined') {
+      localStorage.setItem(`mindtrace_tags_${documentId}`, JSON.stringify(updated))
     }
   }
 
@@ -1251,24 +1310,68 @@ export function Reader() {
               </div>
             </div>
 
-            {/* Conceptual Mesh Tag Cloud */}
+            {/* Conceptual Mesh Tag Cloud with Edit functionality */}
             <div className="sidebar-box" style={{ background: '#FFFFFF', border: '1px solid var(--border-solid)', borderRadius: '12px', padding: '16px' }}>
-              <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 800, color: '#00153C', textTransform: 'uppercase', letterSpacing: '0.08em', margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Tag size={15} /> Mạng lưới ý niệm liên đới
-              </h4>
-              <div className="concept-tag-cloud" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {['Heuristics', 'Cạn kiệt ý chí', 'Thiên kiến sẵn có', 'Nỗ lực tối thiểu', 'Nhận thức luận'].map((tag) => (
-                  <button
-                    key={tag}
-                    className="concept-pill"
-                    style={{ background: '#F9F9F7', border: '1px solid var(--border-solid)', color: '#00153C', borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
-                    onClick={() => {
-                      setSelectedText(tag)
-                      void handleInlineAskAi(`Phân tích ý niệm "${tag}" trong tư duy hệ thống.`)
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '12px', fontWeight: 800, color: '#00153C', textTransform: 'uppercase', letterSpacing: '0.08em', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Tag size={15} /> Mạng lưới ý niệm liên đới
+                </h4>
+                <button
+                  className="secondary-button"
+                  style={{ fontSize: '11px', padding: '2px 8px', minHeight: '26px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                  onClick={() => setEditingTags((v) => !v)}
+                  title={editingTags ? 'Hoàn tất chỉnh sửa ý niệm' : 'Chỉnh sửa danh sách ý niệm cá nhân'}
+                >
+                  {editingTags ? <Check size={12} style={{ color: '#00E676' }} /> : <Pencil size={12} />}
+                  <span>{editingTags ? 'Xong' : 'Sửa'}</span>
+                </button>
+              </div>
+
+              {editingTags && (
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                  <input
+                    type="text"
+                    placeholder="Nhập từ vựng / ý niệm mới…"
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleAddConceptTag()
                     }}
+                    style={{ flex: 1, fontSize: '12px', padding: '5px 8px', border: '1px solid var(--border-solid)', borderRadius: '6px', background: '#F9F9F7' }}
+                  />
+                  <button
+                    style={{ background: '#00153C', color: '#FFF', border: 0, borderRadius: '6px', padding: '0 10px', fontSize: '11px', fontWeight: 700, cursor: 'pointer' }}
+                    onClick={handleAddConceptTag}
                   >
-                    #{tag}
+                    + Thêm
                   </button>
+                </div>
+              )}
+
+              <div className="concept-tag-cloud" style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {conceptTags.map((tag) => (
+                  <div key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                    <button
+                      className="concept-pill"
+                      style={{ background: '#F9F9F7', border: '1px solid var(--border-solid)', color: '#00153C', borderRadius: '20px', padding: '4px 10px', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                      onClick={() => {
+                        setSelectedText(tag)
+                        void handleInlineAskAi(`Phân tích ý niệm "${tag}" trong bài đọc và nguyên lý ứng dụng.`)
+                      }}
+                      title="Bấm để AI giải thích & tạo Quiz Active Recall cho ý niệm này"
+                    >
+                      #{tag}
+                    </button>
+                    {editingTags && (
+                      <button
+                        onClick={() => handleDeleteConceptTag(tag)}
+                        style={{ border: 0, background: '#FF5252', color: '#FFF', borderRadius: '50%', width: '16px', height: '16px', fontSize: '10px', display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}
+                        title="Xóa ý niệm này"
+                      >
+                        <X size={10} />
+                      </button>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
