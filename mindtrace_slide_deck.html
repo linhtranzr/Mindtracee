@@ -47,7 +47,7 @@
       width: 92vw;
       max-width: 1280px;
       height: 84vh;
-      max-height: 720px;
+      max-height: 740px;
       background: var(--bg-card);
       border: 1px solid var(--border-card);
       border-radius: 24px;
@@ -73,7 +73,7 @@
     .slide {
       position: absolute;
       inset: 0;
-      padding: 40px 48px;
+      padding: 36px 48px;
       display: flex;
       flex-direction: column;
       opacity: 0;
@@ -97,7 +97,7 @@
       letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--primary);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -116,7 +116,7 @@
       font-size: 2.1rem;
       font-weight: 800;
       color: #FFF;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       line-height: 1.25;
       background: linear-gradient(135deg, #FFFFFF 30%, var(--text-sub) 100%);
       -webkit-background-clip: text;
@@ -144,25 +144,58 @@
       gap: 20px;
     }
 
+    /* Image Cards & Mockups */
+    .image-card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s ease;
+    }
+    .image-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(0, 240, 255, 0.2);
+    }
+    .image-card img {
+      width: 100%;
+      height: 100%;
+      max-height: 380px;
+      object-fit: cover;
+      display: block;
+      cursor: pointer;
+    }
+    .image-caption {
+      padding: 10px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--primary);
+      background: rgba(13, 17, 23, 0.9);
+      text-align: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
     /* Cards */
     .info-card {
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
       border-radius: 16px;
-      padding: 20px 24px;
+      padding: 18px 22px;
       transition: all 0.3s ease;
     }
     .info-card:hover {
       border-color: rgba(0, 240, 255, 0.35);
       background: rgba(0, 240, 255, 0.04);
-      transform: translateY(-2px);
     }
 
     .card-title {
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 700;
       color: var(--primary);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -172,9 +205,9 @@
     .card-title.green { color: var(--accent-green); }
 
     .card-body {
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       color: var(--text-sub);
-      line-height: 1.6;
+      line-height: 1.55;
     }
 
     .card-body ul {
@@ -182,7 +215,7 @@
     }
 
     .card-body li {
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       position: relative;
       padding-left: 18px;
     }
@@ -195,51 +228,53 @@
     }
 
     /* Hero Slide Specifics */
-    .hero-slide {
-      text-align: center;
+    .hero-container {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 32px;
       align-items: center;
-      justify-content: center;
     }
-    .hero-logo-box {
-      width: 84px;
-      height: 84px;
-      border-radius: 22px;
-      background: linear-gradient(135deg, rgba(0, 240, 255, 0.25), rgba(255, 184, 0, 0.15));
-      border: 1.5px solid var(--primary);
+    .hero-left {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 20px;
-      box-shadow: 0 0 45px rgba(0, 240, 255, 0.4);
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .hero-logo-img {
+      width: 100px;
+      height: 100px;
+      border-radius: 24px;
+      border: 2px solid var(--primary);
+      margin-bottom: 16px;
+      box-shadow: 0 0 35px rgba(0, 240, 255, 0.35);
+      object-fit: cover;
     }
     .hero-title {
       font-family: var(--font-heading);
-      font-size: 3.2rem;
+      font-size: 3rem;
       font-weight: 800;
       background: linear-gradient(135deg, #FFFFFF 0%, var(--primary) 65%, var(--accent) 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
+      line-height: 1.1;
     }
     .hero-subtitle {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: var(--text-sub);
-      max-width: 680px;
-      line-height: 1.6;
-      margin-bottom: 28px;
+      line-height: 1.5;
+      margin-bottom: 24px;
     }
     .badge-group {
       display: flex;
-      gap: 12px;
+      gap: 10px;
       flex-wrap: wrap;
-      justify-content: center;
     }
     .badge {
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 6px 16px;
+      padding: 6px 14px;
       border-radius: 20px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
       color: var(--text-main);
     }
@@ -309,37 +344,7 @@
       color: var(--accent-green);
     }
 
-    /* UI Mockup Screen (Slide 8) */
-    .mockup-window {
-      background: #0d1117;
-      border: 1px solid rgba(0, 240, 255, 0.25);
-      border-radius: 16px;
-      padding: 16px;
-      display: flex;
-      gap: 16px;
-      height: 360px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    }
-    .mockup-main {
-      flex: 1;
-      background: #161b22;
-      border-radius: 12px;
-      padding: 20px;
-      overflow-y: auto;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-    .mockup-sidebar {
-      width: 320px;
-      background: #161b22;
-      border-radius: 12px;
-      padding: 16px;
-      border: 1px solid rgba(0, 240, 255, 0.2);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    /* Footer & Navigation Controls (Strictly on top of slides) */
+    /* Footer & Navigation Controls */
     .deck-footer {
       position: absolute;
       bottom: 0;
@@ -353,7 +358,7 @@
       padding: 0 36px;
       background: rgba(8, 12, 20, 0.95);
       backdrop-filter: blur(16px);
-      z-index: 100; /* Ensure footer controls are always clickable */
+      z-index: 100;
     }
 
     .slide-counter {
@@ -414,6 +419,33 @@
       border-color: rgba(255, 255, 255, 0.1);
       color: var(--text-sub);
     }
+
+    /* Image Modal Overlay */
+    .image-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .image-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .image-modal img {
+      max-width: 90vw;
+      max-height: 88vh;
+      border-radius: 16px;
+      border: 1.5px solid var(--primary);
+      box-shadow: 0 0 50px rgba(0, 240, 255, 0.3);
+    }
   </style>
 </head>
 <body>
@@ -422,21 +454,26 @@
 
     <div class="slides-wrapper">
 
-      <!-- SLIDE 1: TRANG BÌA -->
-      <div class="slide hero-slide active" id="slide-1">
-        <div class="hero-logo-box">
-          <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#00F0FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
-            <path d="M12 6v6l4 2"/>
-          </svg>
-        </div>
-        <h1 class="hero-title">MindTrace v2</h1>
-        <p class="hero-subtitle">Nền tảng Đọc Chuyên Sâu & Tái Cấu Trúc Tri Thức Bằng Trợ Lý AI Thông Minh</p>
-        <div class="badge-group">
-          <span class="badge">Active Recall</span>
-          <span class="badge">Contextual AI</span>
-          <span class="badge">Fail-Proof PDF Reader</span>
-          <span class="badge">Vite + React 19</span>
+      <!-- SLIDE 1: TRANG BÌA WITH HERO IMAGE -->
+      <div class="slide active" id="slide-1">
+        <div class="slide-content">
+          <div class="hero-container">
+            <div class="hero-left">
+              <img src="./mindtrace_logo.png" alt="MindTrace Logo" class="hero-logo-img" onerror="this.src='./mindtrace_hero.png'">
+              <h1 class="hero-title">MindTrace v2</h1>
+              <p class="hero-subtitle">Nền tảng Đọc Chuyên Sâu & Tái Cấu Trúc Tri Thức Bằng Trợ Lý AI Thông Minh</p>
+              <div class="badge-group">
+                <span class="badge">Active Recall</span>
+                <span class="badge">Contextual AI</span>
+                <span class="badge">Fail-Proof PDF Reader</span>
+                <span class="badge">Vite + React 19</span>
+              </div>
+            </div>
+            <div class="image-card">
+              <img src="./mindtrace_hero.png" alt="MindTrace Hero Banner" onclick="openModal(this.src)">
+              <div class="image-caption">MindTrace v2 — Dashboard & Trình Đọc Smart Reader</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -468,55 +505,47 @@
         </div>
       </div>
 
-      <!-- SLIDE 3: Ý TƯỞNG CỐT LÕI & UX -->
+      <!-- SLIDE 3: Ý TƯỞNG CỐT LÕI & REAL LOGIN SCREENSHOT -->
       <div class="slide" id="slide-3">
-        <div class="slide-tag">Định Hướng Trải Nghiệm</div>
-        <h2 class="slide-title">Ý Tưởng Cốt Lõi & Phân Loại Độc Giả</h2>
-        <div class="slide-content grid-3">
-          <div class="info-card">
+        <div class="slide-tag">Định Hướng Trải Nghiệm & Đăng Nhập</div>
+        <h2 class="slide-title">Ý Tưởng Cốt Lõi & Phân Loại Độc Giả Thật</h2>
+        <div class="slide-content grid-2">
+          <div class="info-card" style="display:flex; flex-direction:column; justify-content:center;">
             <div class="card-title">🎓 Nhóm GenZ / Sinh Viên</div>
-            <div class="card-body">
-              <p style="margin-bottom: 8px;">Cần trải nghiệm trực quan, yên tĩnh, phản hồi tức thì và câu hỏi tự kiểm tra ngắn gọn.</p>
-              <span class="status-badge">Tự Ôn Tập Nhanh</span>
-            </div>
-          </div>
-          <div class="info-card">
+            <p class="card-body" style="margin-bottom:12px;">Cần không gian yên tĩnh, khám phá tri thức trực quan, câu hỏi tự kiểm tra ngắn gọn.</p>
+            
             <div class="card-title gold">💼 Khối Bận Rộn / DeepWork</div>
-            <div class="card-body">
-              <p style="margin-bottom: 8px;">Cần không gian làm việc tập trung cao độ, loại bỏ xao nhãng và trích xuất bài học cốt lõi.</p>
-              <span class="status-badge" style="background:rgba(255,184,0,0.15); color:var(--accent);">Tập Trung Cao Độ</span>
-            </div>
+            <p class="card-body" style="margin-bottom:12px;">Cần chế độ xem tập trung cao độ, loại bỏ xao nhãng và trích xuất bài học cốt lõi.</p>
+
+            <div class="card-title green">⚡ Trải Nghiệm Khám Phá Mượt Mà</div>
+            <p class="card-body">Bấm khám phá mẫu ngay lập tức, hệ thống tự động xác thực tài khoản khi tương tác sâu.</p>
           </div>
-          <div class="info-card">
-            <div class="card-title green">⚡ Trải Nghiệm Mượt Mà</div>
-            <div class="card-body">
-              <p style="margin-bottom: 8px;">Cho phép dùng thử & khám phá mẫu ngay lập tức, xác thực tài khoản tự động khi tương tác sâu.</p>
-              <span class="status-badge">UX Thân Thiện</span>
-            </div>
+
+          <div class="image-card">
+            <img src="./demo_login.png" alt="Trang Đăng Nhập & Phân Loại Đối Tượng Độc Giả Thật" onclick="openModal(this.src)">
+            <div class="image-caption">Ảnh chụp giao diện thật: Đăng nhập & Chọn Profile Độc Giả</div>
           </div>
         </div>
       </div>
 
-      <!-- SLIDE 4: TÍNH NĂNG ĐỘT PHÁ -->
+      <!-- SLIDE 4: TÍNH NĂNG ĐỘT PHÁ & REAL CANVAS SCREENSHOT -->
       <div class="slide" id="slide-4">
-        <div class="slide-tag">Công Năng Sản Phẩm</div>
-        <h2 class="slide-title">5 Tính Năng Đột Phá Trên MindTrace v2</h2>
+        <div class="slide-tag">Công Năng Sản Phẩm & Canvas</div>
+        <h2 class="slide-title">5 Tính Năng Đột Phá & Công Cụ Ghi Chép</h2>
         <div class="slide-content grid-2">
-          <div class="info-card">
+          <div class="image-card">
+            <img src="./demo_canvas.png" alt="Giao diện Công Cụ Vẽ Ink Canvas & Bôi Đen Trích Dẫn Thật" onclick="openModal(this.src)">
+            <div class="image-caption">Ảnh chụp giao diện thật: Vẽ Nét Ink Canvas & Tô Màu PDF</div>
+          </div>
+          <div class="info-card" style="display:flex; flex-direction:column; justify-content:center;">
             <div class="card-title">1. Trình Đọc PDF Fail-Proof</div>
-            <div class="card-body">Tự động lưu cache tệp Blob vào IndexedDB local, đọc mượt mà ngay cả khi mất kết nối mạng.</div>
-          </div>
-          <div class="info-card">
+            <p class="card-body" style="margin-bottom:10px;">Lưu cache Blob IndexedDB local, đọc mượt màng ngay cả khi ngắt mạng.</p>
+
             <div class="card-title gold">2. AI Phân Tích Ngữ Cảnh Động</div>
-            <div class="card-body">Bôi đen văn bản để AI giải thích bản chất thực tế, đúc kết 2 bài học và đặt 1 câu hỏi Active Recall.</div>
-          </div>
-          <div class="info-card">
-            <div class="card-title green">3. Phân Tích Tổng Quan Bài Học</div>
-            <div class="card-body">Tự động trích xuất Tóm tắt, Ý chính kèm số trang, Thuật ngữ và Quiz tự kiểm tra ghi nhớ.</div>
-          </div>
-          <div class="info-card">
-            <div class="card-title">4. Ink Canvas & Highlight</div>
-            <div class="card-body">Hỗ trợ vẽ tay, tô màu và đánh dấu trực tiếp trên các trang PDF với đa dạng màu sắc.</div>
+            <p class="card-body" style="margin-bottom:10px;">Bôi đen câu văn để AI giải thích bản chất thực tế & đúc kết bài học.</p>
+
+            <div class="card-title green">3. Ink Canvas & Highlight Vẽ Tay</div>
+            <p class="card-body">Vẽ nét bút mực, tô màu và lưu vị trí trực tiếp lên trang tài liệu PDF.</p>
           </div>
         </div>
       </div>
@@ -609,27 +638,23 @@
         </div>
       </div>
 
-      <!-- SLIDE 8: DEMO GIAO DIỆN THỰC TẾ -->
+      <!-- SLIDE 8: DEMO GIAO DIỆN WEB THẬT WITH REAL AI READER SCREENSHOT -->
       <div class="slide" id="slide-8">
-        <div class="slide-tag">Minh Họa Trực Quan</div>
-        <h2 class="slide-title">Demo Trực Tiếp Giao Diện Web Thật</h2>
-        <div class="slide-content">
-          <div class="mockup-window">
-            <div class="mockup-main">
-              <h4 style="color:var(--primary); margin-bottom:12px;">📄 RISK DISCLAIMER — Trading Hub 4.0</h4>
-              <p style="background:rgba(255,184,0,0.15); border-left:3px solid var(--accent); padding:10px; font-size:0.9rem; line-height:1.5;">
-                "Forex, options, futures, spread betting, cryptocurrencies, and CFDs are intricate instruments that entail a significant risk of rapid financial loss due to leverage and market volatility."
-              </p>
-            </div>
-            <div class="mockup-sidebar">
-              <div style="font-weight:700; color:var(--primary); font-size:0.9rem;">⚡ Phân Tích Ngữ Cảnh Tài Chính</div>
-              <p style="font-size:0.8rem; color:var(--text-sub); line-height:1.4;">
-                Đoạn trích cảnh báo về mức độ rủi ro cao khi lạm dụng đòn bẩy tài chính trong giao dịch các sản phẩm biến động mạnh.
-              </p>
-              <div style="font-size:0.75rem; background:rgba(0,240,255,0.08); padding:8px; border-radius:6px; border:1px solid rgba(0,240,255,0.2);">
-                <strong>❓ Active Recall:</strong> Bạn sẽ áp dụng quy tắc quản trị vốn như thế nào để phòng ngừa rủi ro đòn bẩy này?
-              </div>
-            </div>
+        <div class="slide-tag">Minh Họa Trực Quan Giao Diện Thật</div>
+        <h2 class="slide-title">Demo Trực Tiếp Trình Đọc PDF & AI Context Real</h2>
+        <div class="slide-content grid-2">
+          <div class="image-card">
+            <img src="./demo_reader_ai.png" alt="Trình Đọc PDF & AI Phân Tích Ngữ Cảnh Thật" onclick="openModal(this.src)">
+            <div class="image-caption">Ảnh chụp giao diện thật: AI Giải Thích Ngữ Cảnh "RISK DISCLAIMER"</div>
+          </div>
+          <div class="info-card" style="display:flex; flex-direction:column; justify-content:center;">
+            <div class="card-title gold">⚡ Trực Quan Phân Tích Thực Tế</div>
+            <ul class="card-body">
+              <li><strong>Trích dẫn bôi đen:</strong> Đoạn văn về rủi ro Forex, CFD và tài sản đòn bẩy.</li>
+              <li><strong>AI giải thích cốt lõi:</strong> Phân tích trực tiếp bản chất quản trị vốn tài chính.</li>
+              <li><strong>Bài học đọng lại:</strong> Đúc kết quy tắc cắt lỗ và kiểm soát tâm lý giao dịch.</li>
+              <li><strong>Active Recall:</strong> Đặt câu hỏi mở để người đọc tự áp dụng thực tế.</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -701,6 +726,11 @@
 
   </div>
 
+  <!-- Fullscreen Image Modal Viewer -->
+  <div class="image-modal" id="image-modal" onclick="closeModal()">
+    <img id="modal-img" src="" alt="Zoomed Screenshot">
+  </div>
+
   <script>
     let currentSlide = 1;
     const totalSlides = 10;
@@ -737,9 +767,22 @@
       renderDots();
     }
 
-    // Keyboard Arrow Keys & Space Navigation
+    function openModal(src) {
+      const modal = document.getElementById('image-modal');
+      const img = document.getElementById('modal-img');
+      img.src = src;
+      modal.classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('image-modal').classList.remove('active');
+    }
+
+    // Keyboard Navigation
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+      if (e.key === 'Escape') {
+        closeModal();
+      } else if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
         e.preventDefault();
         changeSlide(1);
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
@@ -757,9 +800,9 @@
     document.addEventListener('touchend', (e) => {
       const touchEndX = e.changedTouches[0].screenX;
       if (touchStartX - touchEndX > 50) {
-        changeSlide(1); // Swipe left -> Next
+        changeSlide(1);
       } else if (touchEndX - touchStartX > 50) {
-        changeSlide(-1); // Swipe right -> Prev
+        changeSlide(-1);
       }
     });
 
