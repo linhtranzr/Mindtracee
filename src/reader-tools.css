@@ -227,13 +227,21 @@
   bottom: 24px;
   z-index: 100;
   width: 380px;
-  max-width: calc(100vw - 32px);
-  max-height: 82vh;
-  overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 12px 48px rgba(0,0,0,0.25);
+}
+
+/* Inline PDF Text Layer Mark Highlighting */
+.react-pdf__Page__textContent mark {
+  border-radius: 3px;
+  padding: 1px 3px;
+  pointer-events: auto;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.react-pdf__Page__textContent span {
+  opacity: 1 !important;
 }
 

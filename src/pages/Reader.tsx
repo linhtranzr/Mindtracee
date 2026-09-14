@@ -598,6 +598,42 @@ export function Reader() {
     }
   }, [])
 
+  const customTextRenderer = useCallback(
+    ({ str }: { str: string }) => {
+      if (!str || !annotations || annotations.length === 0) return str
+
+      const highlights = annotations.filter(
+        (a) => a.kind === 'highlight' && a.selected_text && a.selected_text.trim().length > 1
+      )
+
+      if (highlights.length === 0) return str
+
+      let result = str
+      let matched = false
+
+      for (const hl of highlights) {
+        const snippet = hl.selected_text!.trim()
+        const color = (hl.source_location as { color?: string })?.color || '#FACC15'
+
+        if (str.toLowerCase().includes(snippet.toLowerCase())) {
+          const escaped = snippet.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')
+          const regex = new RegExp(`(${escaped})`, 'gi')
+          result = result.replace(
+            regex,
+            `<mark style="background-color: ${color}99; color: inherit; border-radius: 2px; padding: 0 2px; border-bottom: 2px solid ${color}; font-weight: 600;">$1</mark>`
+          )
+          matched = true
+        } else if (snippet.toLowerCase().includes(str.toLowerCase()) && str.trim().length > 3) {
+          result = `<mark style="background-color: ${color}99; color: inherit; border-radius: 2px; padding: 0 2px; border-bottom: 2px solid ${color}; font-weight: 600;">${result}</mark>`
+          matched = true
+        }
+      }
+
+      return matched ? result : str
+    },
+    [annotations]
+  )
+
   async function onPdfLoaded(pdf: PDFDocumentProxy) {
     setError('')
     setNumPages(pdf.numPages)
@@ -1217,6 +1253,7 @@ export function Reader() {
                   scale={zoom}
                   renderTextLayer={!drawMode}
                   renderAnnotationLayer
+                  customTextRenderer={customTextRenderer}
                 />
                 <InkCanvas
                   active={drawMode}
@@ -1228,42 +1265,6 @@ export function Reader() {
                 />
               </div>
             </Document>
-
-            {/* Persistent Highlight Overlay for Current Page */}
-            {annotations
-              .filter((item) => item.source_location?.page === pageNumber && item.selected_text)
-              .map((item) => {
-                const hlColor = (item.source_location as { color?: string })?.color || '#FACC15'
-                return (
-                  <div
-                    key={item.id}
-                    style={{
-                      background: `${hlColor}25`,
-                      borderLeft: `4px solid ${hlColor}`,
-                      borderRadius: '0 8px 8px 0',
-                      padding: '8px 14px',
-                      margin: '10px 0',
-                      fontSize: '14px',
-                      fontFamily: 'var(--font-serif)',
-                      color: '#1A1C1B',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      gap: '12px'
-                    }}
-                  >
-                    <span>“{item.selected_text}”</span>
-                    <button
-                      onClick={() => void deleteAnnotation(item.id)}
-                      style={{ border: 0, background: 'transparent', color: '#A4433F', cursor: 'pointer', opacity: 0.7, padding: '2px', flexShrink: 0 }}
-                      title="Xóa highlight này"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                )
-              })
-            }
 
             {/* Floating Selection Tooltip (Bôi đen câu chữ & Chọn màu Highlight) */}
             {selectedText && !drawMode && (
