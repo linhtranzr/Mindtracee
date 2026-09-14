@@ -20,6 +20,147 @@ export type InsightContent = {
 }
 
 
+export type QuizItem = {
+  id: string
+  question: string
+  options: string[]
+  correctIndex: number
+  explanation: string
+}
+
+export function parseQuizFromAiResponse(content: string, defaultTopic: string = 'Tổng quan'): QuizItem[] {
+  if (!content) return getFallbackQuizQuestions(defaultTopic)
+
+  const quizSectionMatch = content.match(/###\s*🧠\s*Active Recall Quiz[\s\S]*/i) ||
+    content.match(/Q1:[\s\S]*/i)
+
+  if (!quizSectionMatch) {
+    return getFallbackQuizQuestions(defaultTopic)
+  }
+
+  const textToParse = quizSectionMatch[0]
+  const qBlocks = textToParse.split(/(?=Q\d+:)/gi).filter(b => b.trim().length > 0)
+  const parsedItems: QuizItem[] = []
+
+  for (let i = 0; i < qBlocks.length; i++) {
+    const block = qBlocks[i].trim()
+    const qMatch = block.match(/Q\d+:\s*(.*?)(?=\n[A-D]\)|\nĐáp án|\n$)/s)
+    if (!qMatch) continue
+
+    const qText = qMatch[1].trim()
+    const optionMatches = [...block.matchAll(/([A-D])\)\s*(.*?)(?=\n[A-D]\)|\nĐáp án|\nGiải thích|\n$)/g)]
+    const options = optionMatches.map(m => `${m[1]}) ${m[2].trim()}`)
+
+    const ansMatch = block.match(/Đáp án đúng:\s*([A-D])/i)
+    let correctIndex = 0
+    if (ansMatch) {
+      const letter = ansMatch[1].toUpperCase()
+      correctIndex = letter === 'A' ? 0 : letter === 'B' ? 1 : letter === 'C' ? 2 : 3
+    }
+
+    const expMatch = block.match(/Giải thích:\s*(.*)/i)
+    const explanation = expMatch ? expMatch[1].trim() : 'Đáp án chính xác dựa theo nguyên lý cốt lõi của bài đọc.'
+
+    if (qText && options.length >= 2) {
+      parsedItems.push({
+        id: `q-${i + 1}`,
+        question: qText,
+        options,
+        correctIndex: Math.min(correctIndex, options.length - 1),
+        explanation,
+      })
+    }
+  }
+
+  if (parsedItems.length > 0) {
+    return parsedItems
+  }
+
+  return getFallbackQuizQuestions(defaultTopic)
+}
+
+export function getFallbackQuizQuestions(topicCategory: string): QuizItem[] {
+  const lower = topicCategory.toLowerCase()
+  if (lower.includes('tài chính') || lower.includes('rủi ro') || lower.includes('risk') || lower.includes('finance')) {
+    return [
+      {
+        id: 'q-fin-1',
+        question: 'Theo nội dung bài đọc, yếu tố nào cần ưu tiên hàng đầu trước khi tham gia vị thế đòn bẩy cao?',
+        options: [
+          'A) Tối đa hóa quy mô đòn bẩy để kiếm lợi nhuận nhanh',
+          'B) Xác định rõ tỷ lệ cắt lỗ và nguyên tắc bảo toàn vốn',
+          'C) Giao dịch liên tục theo cảm xúc thị trường ngắn hạn'
+        ],
+        correctIndex: 1,
+        explanation: 'Bảo toàn vốn và cắt lỗ nghiêm ngặt là nguyên tắc sống còn khi tham gia các sản phẩm rủi ro.'
+      },
+      {
+        id: 'q-fin-2',
+        question: 'Tuyên bố cảnh báo rủi ro mang ý nghĩa bản chất gì cho nhà đầu tư?',
+        options: [
+          'A) Minh bạch hóa các nguy cơ tổn thất vốn để tự chịu trách nhiệm',
+          'B) Đảm bảo lợi nhuận cố định hàng tháng',
+          'C) Khuyên nhà đầu tư vay thêm vốn đòn bẩy'
+        ],
+        correctIndex: 0,
+        explanation: 'Cảnh báo rủi ro giúp độc giả định hình nhận thức thực tế và kiểm soát kỳ vọng.'
+      }
+    ]
+  }
+
+  if (lower.includes('kỹ thuật') || lower.includes('tech') || lower.includes('code') || lower.includes('hệ thống')) {
+    return [
+      {
+        id: 'q-tech-1',
+        question: 'Nguyên tắc cốt lõi giúp hệ thống phần mềm duy trì tính ổn định lâu dài là gì?',
+        options: [
+          'A) Phụ thuộc hoàn toàn vào thư viện bên thứ ba mà không hiểu nguyên lý',
+          'B) Thiết kế luồng dữ liệu mạch lạc và xây dựng kịch bản phòng ngừa lỗi',
+          'C) Bỏ qua khâu tái cấu trúc mã nguồn khi dự án tăng quy mô'
+        ],
+        correctIndex: 1,
+        explanation: 'Logic rõ ràng và dự phòng ngoại lệ giúp phần mềm bền vững khi mở rộng.'
+      },
+      {
+        id: 'q-tech-2',
+        question: 'Mục đích của việc Refactoring (tái cấu trúc mã) là gì?',
+        options: [
+          'A) Cải thiện cấu trúc bên trong mà không làm thay đổi hành vi bên ngoài',
+          'B) Thay đổi toàn bộ tính năng người dùng',
+          'C) Tạo thêm các lỗi ẩn trong hệ thống'
+        ],
+        correctIndex: 0,
+        explanation: 'Refactoring giúp duy trì mã nguồn sạch, dễ đọc và dễ bảo trì.'
+      }
+    ]
+  }
+
+  return [
+    {
+      id: 'q-gen-1',
+      question: 'Phương pháp nào giúp chuyển hóa kiến thức từ bài đọc thành tri thức dài hạn?',
+      options: [
+        'A) Chỉ đọc lướt qua một lần và không bao giờ gợi nhớ lại',
+        'B) Tự giải thích lại bằng từ ngữ của chính mình (Active Recall)',
+        'C) Học thuộc lòng nguyên văn từng câu chữ mà không hiểu bản chất'
+      ],
+      correctIndex: 1,
+      explanation: 'Tự hồi tưởng và diễn đạt bằng từ ngữ cá nhân là chìa khóa khắc sâu trí nhớ dài hạn.'
+    },
+    {
+      id: 'q-gen-2',
+      question: 'Để kiểm chứng mức độ hiểu biết của bản thân với chương vừa đọc, bạn nên làm gì?',
+      options: [
+        'A) Thực hành trả lời các câu hỏi gợi mở và đối chiếu nguyên tác',
+        'B) Bỏ qua các phần chưa hiểu và đọc tiếp chương mới',
+        'C) Đợi 1 tháng sau mới xem lại tài liệu'
+      ],
+      correctIndex: 0,
+      explanation: 'Thực hành Active Recall ngay sau khi đọc giúp phát hiện lỗ hổng nhận thức tức thì.'
+    }
+  ]
+}
+
 /**
  * Groq AI & Contextual Academic Reflection Module
  */
@@ -55,7 +196,7 @@ export async function askGroqAI(params: {
             {
               role: 'system',
               content:
-                'Bạn là Trợ lý Tri thức AI của ứng dụng MindTrace. Nhiệm vụ của bạn là giải thích đoạn văn được bôi đen từ tài liệu bằng tiếng Việt chuẩn mực, mạch lạc, chính xác theo ĐÚNG CHỦ ĐỀ và ngữ cảnh thực tế của tài liệu.\n\nĐịnh dạng trả về bắt buộc gồm 3 phần:\n### ⚡ Phân Tích Ngữ Cảnh [Chủ đề cụ thể]\n**Đoạn trích trích dẫn:**\n> "..."\n\n**Nội dung giải thích cốt lõi:**\n(Giải thích bản chất, ý nghĩa thực tế của đoạn văn trích dẫn)\n\n---\n\n**📌 Bài học đọng lại:**\n- (Gạch đầu dòng 1 đúc kết trực tiếp từ nội dung)\n- (Gạch đầu dòng 2 áp dụng thực tế)\n\n---\n\n**❓ Câu hỏi gợi mở Active Recall:**\n*(1 câu hỏi kích thích tư duy người đọc sâu sắc dựa trên nội dung đoạn văn)*'
+                'Bạn là Trợ lý Tri thức AI của ứng dụng MindTrace. Nhiệm vụ của bạn là giải thích đoạn văn được bôi đen từ tài liệu bằng tiếng Việt chuẩn mực, mạch lạc, chính xác theo ĐÚNG CHỦ ĐỀ và ngữ cảnh thực tế của tài liệu.\n\nĐịnh dạng trả về bắt buộc gồm 4 phần:\n### ⚡ Phân Tích Ngữ Cảnh [Chủ đề cụ thể]\n**Đoạn trích trích dẫn:**\n> "..."\n\n**Nội dung giải thích cốt lõi:**\n(Giải thích bản chất, ý nghĩa thực tế của đoạn văn trích dẫn)\n\n---\n\n**📌 Bài học đọng lại:**\n- (Gạch đầu dòng 1 đúc kết trực tiếp từ nội dung)\n- (Gạch đầu dòng 2 áp dụng thực tế)\n\n---\n\n**❓ Câu hỏi gợi mở Active Recall:**\n*(1 câu hỏi kích thích tư duy người đọc sâu sắc dựa trên nội dung đoạn văn)*\n\n---\n\n### 🧠 Active Recall Quiz (2 Câu Hỏi Trắc Nghiệm):\nQ1: [Câu hỏi 1?]\nA) [Lựa chọn A]\nB) [Lựa chọn B]\nC) [Lựa chọn C]\nĐáp án đúng: B\nGiải thích: [Giải thích lý do]\n\nQ2: [Câu hỏi 2?]\nA) [Lựa chọn A]\nB) [Lựa chọn B]\nC) [Lựa chọn C]\nĐáp án đúng: A\nGiải thích: [Giải thích lý do]'
             },
             {
               role: 'user',
@@ -63,7 +204,7 @@ export async function askGroqAI(params: {
             }
           ],
           temperature: 0.4,
-          max_tokens: 850,
+          max_tokens: 1100,
         }),
       })
 
@@ -189,6 +330,20 @@ export function generateSmartAcademicExplanation(
 
   const userQuestionHeader = !isDefaultQuestion ? `**Trả lời câu hỏi:** "${question}"\n\n` : ''
 
+  const quizFormattedText = `\n\n---\n\n### 🧠 Active Recall Quiz (2 Câu Hỏi Tự Kiểm Tra):\n\nQ1: ${topicCategory.includes('Tài Chính') ? 'Yếu tố nào quan trọng nhất khi xử lý rủi ro đòn bẩy?' : topicCategory.includes('Kỹ Thuật') ? 'Nguyên tắc cốt lõi giúp thiết kế hệ thống bền vững là gì?' : 'Phương pháp nào giúp chuyển hóa bài đọc thành tri thức dài hạn?'}
+A) ${topicCategory.includes('Tài Chính') ? 'Giao dịch cảm xúc ngắn hạn' : topicCategory.includes('Kỹ Thuật') ? 'Phụ thuộc công cụ bên ngoài' : 'Đọc thụ động và không ghi nhớ'}
+B) ${topicCategory.includes('Tài Chính') ? 'Luôn xác định tỷ lệ cắt lỗ và nguyên tắc bảo toàn vốn' : topicCategory.includes('Kỹ Thuật') ? 'Nắm vững luồng dữ liệu và thiết kế kịch bản xử lý lỗi' : 'Tự giải thích lại bằng từ ngữ của chính mình (Active Recall)'}
+C) ${topicCategory.includes('Tài Chính') ? 'Tăng quy mô đòn bẩy tối đa' : topicCategory.includes('Kỹ Thuật') ? 'Bỏ qua kiểm thử phần mềm' : 'Học thuộc lòng nguyên văn'}
+Đáp án đúng: B
+Giải thích: Khái niệm được nhấn mạnh trực tiếp trong đoạn trích.
+
+Q2: ${topicCategory.includes('Tài Chính') ? 'Lợi ích của tuyên bố rủi ro là gì?' : topicCategory.includes('Kỹ Thuật') ? 'Mục đích của tái cấu trúc mã là gì?' : 'Làm thế nào để đo lường mức độ hiểu bài?'}
+A) ${topicCategory.includes('Tài Chính') ? 'Minh bạch nguy cơ để người tham gia chủ động quản trị vốn' : topicCategory.includes('Kỹ Thuật') ? 'Nâng cao cấu trúc mã mà giữ nguyên tính đúng đắn hệ thống' : 'Thực hành câu hỏi kiểm chứng và đối chiếu nguyên tác'}
+B) ${topicCategory.includes('Tài Chính') ? 'Đảm bảo 100% không tổn thất' : topicCategory.includes('Kỹ Thuật') ? 'Thay đổi toàn bộ chức năng người dùng' : 'Đọc thêm nhiều tài liệu khác'}
+C) ${topicCategory.includes('Tài Chính') ? 'Khuyên vay đòn bẩy vô hạn' : topicCategory.includes('Kỹ Thuật') ? 'Tăng độ phức tạp của code' : 'Không làm gì cả'}
+Đáp án đúng: A
+Giải thích: Giúp độc giả kiểm chứng thực tế và củng cố tư duy.`
+
   const formattedOutput = `### ⚡ Phân Tích Ngữ Cảnh (${topicCategory})
 
 **Đoạn trích trích dẫn:**
@@ -206,7 +361,7 @@ ${coreAnalysis}
 ---
 
 **❓ Câu hỏi gợi mở Active Recall:**
-*${!isDefaultQuestion ? question : socraticQuestion}*`
+*${!isDefaultQuestion ? question : socraticQuestion}*${quizFormattedText}`
 
   return { explanation: formattedOutput, socraticQuestion: !isDefaultQuestion ? question : socraticQuestion }
 }

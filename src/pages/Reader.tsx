@@ -33,10 +33,12 @@ import '../reader-tools.css'
 import { InkCanvas, type InkStroke } from '../components/InkCanvas'
 import { FormattedAiMessage } from '../components/FormattedAiMessage'
 import { Status } from '../components/Status'
+import { ActiveRecallQuiz } from '../components/ActiveRecallQuiz'
 import { formatCleanTitle, normalizeVietnameseText, stripMarkdown } from '../lib/vietnamese'
 import { supabase } from '../lib/supabase'
-import { askGroqAI, generateSmartAcademicExplanation } from '../lib/ai'
+import { askGroqAI, generateSmartAcademicExplanation, parseQuizFromAiResponse } from '../lib/ai'
 import { getCachedPdfBlob, savePdfBlobToCache } from '../lib/offline-storage'
+import { getStatusLabel, type KnowledgeStatus } from '../lib/knowledge-engine'
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString()
 
@@ -63,6 +65,7 @@ export type TocItem = {
   page: number
   summary?: string
   keyPoints?: string[]
+  status?: KnowledgeStatus
 }
 
 function extractKeyPointsFromText(pageText: string, chapterTitle: string, docTitle: string): string[] {
@@ -595,6 +598,51 @@ export function Reader() {
     setAnnotations((items) => items.filter((item) => item.id !== id))
   }
 
+  async function handleChapterQuizEvaluated(status: KnowledgeStatus, scorePercent: number) {
+    if (!activeChapter) return
+
+    setTocItems((items) =>
+      items.map((item) => (item.id === activeChapter.id ? { ...item, status } : item))
+    )
+
+    try {
+      const topicName = activeChapter.title
+      const { data: existingTopic } = await supabase
+        .from('knowledge_topics')
+        .select('id')
+        .eq('topic_name', topicName)
+        .maybeSingle()
+
+      let topicId = existingTopic?.id
+      if (!topicId) {
+        const { data: newTopic } = await supabase
+          .from('knowledge_topics')
+          .insert({
+            topic_name: topicName,
+            status,
+          })
+          .select('id')
+          .single()
+        topicId = newTopic?.id
+      } else {
+        await supabase
+          .from('knowledge_topics')
+          .update({ status, updated_at: new Date().toISOString() })
+          .eq('id', topicId)
+      }
+
+      if (topicId) {
+        await supabase.from('knowledge_evidence').insert({
+          topic_id: topicId,
+          kind: status === 'mastered' ? 'explained' : status === 'forming' ? 'review_recall' : 'could_not_recall',
+          content: `Active Recall Quiz: ${scorePercent}% chính xác (${getStatusLabel(status).text})`,
+        })
+      }
+    } catch (err) {
+      console.warn('Could not persist topic status:', err)
+    }
+  }
+
   const minutesRead = Math.max(1, Math.floor(sessionSeconds / 60))
   const cleanTitle = formatCleanTitle(document?.title)
   const progressPercent = numPages > 0 ? Math.round((pageNumber / numPages) * 100) : 0
@@ -769,9 +817,16 @@ export function Reader() {
                           transition: 'all 0.15s ease'
                         }}
                       >
-                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
-                          {chap.title}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflow: 'hidden' }}>
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {chap.title}
+                          </span>
+                          {chap.status && (
+                            <span className={getStatusLabel(chap.status).className} style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '10px', width: 'fit-content' }}>
+                              {getStatusLabel(chap.status).text}
+                            </span>
+                          )}
+                        </div>
                         <span style={{ fontSize: '10px', opacity: isActive ? 0.8 : 0.6, flexShrink: 0 }}>tr.{chap.page}</span>
                       </button>
                     )
@@ -1088,13 +1143,22 @@ export function Reader() {
                 <p style={{ margin: '8px 0 0', fontSize: '13px' }}>AI Groq đang phân tích ngữ cảnh học thuật…</p>
               </div>
             ) : (
-              <FormattedAiMessage
-                content={inlineAiAnswer}
-                onSaveAsNote={(text) => {
-                  setNoteText(text)
-                  setShowInlineAi(false)
-                }}
-              />
+              <>
+                <FormattedAiMessage
+                  content={inlineAiAnswer}
+                  onSaveAsNote={(text) => {
+                    setNoteText(text)
+                    setShowInlineAi(false)
+                  }}
+                />
+                <ActiveRecallQuiz
+                  quizItems={parseQuizFromAiResponse(inlineAiAnswer, activeChapter?.title || 'Bối cảnh tài liệu')}
+                  topicName={activeChapter?.title || cleanTitle}
+                  onEvaluated={(status, scorePercent) => {
+                    void handleChapterQuizEvaluated(status, scorePercent)
+                  }}
+                />
+              </>
             )}
           </div>
         )}
