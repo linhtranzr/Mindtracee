@@ -224,15 +224,16 @@
 .inline-ai-popover {
   position: fixed;
   right: 310px;
-  bottom: 30px;
-  z-index: 40;
-  width: 360px;
-  max-height: 80vh;
+  bottom: 24px;
+  z-index: 100;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: 82vh;
   overflow-y: auto;
   background: #ffffff;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.25);
 }
 

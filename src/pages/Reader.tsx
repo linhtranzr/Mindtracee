@@ -57,7 +57,7 @@ type Annotation = {
   kind: 'note' | 'highlight' | 'ink'
   note: string | null
   selected_text: string | null
-  source_location: { page?: number; strokes?: InkStroke[] }
+  source_location: { page?: number; strokes?: InkStroke[]; color?: string }
   created_at: string
 }
 
@@ -572,6 +572,39 @@ export function Reader() {
     setSaving(false)
     if (saveError) return setError('Chưa thể lưu ghi chú.')
     setNoteText('')
+    setSelectedText('')
+    window.getSelection()?.removeAllRanges()
+    await loadWorkspace()
+  }
+
+  async function handleHighlightText(color: string = '#FACC15') {
+    if (!selectedText || !documentId) return
+    setSaving(true)
+    setError('')
+
+    const highlightTextToSave = selectedText
+    const newHighlight: Annotation = {
+      id: `hl-${Date.now()}`,
+      kind: 'highlight',
+      note: `[Highlight]: ${highlightTextToSave.slice(0, 80)}`,
+      selected_text: highlightTextToSave,
+      source_location: { page: pageNumber, color },
+      created_at: new Date().toISOString(),
+    }
+
+    setAnnotations((prev) => [newHighlight, ...prev])
+
+    const { error: saveError } = await supabase.from('annotations').insert({
+      document_id: documentId,
+      kind: 'highlight',
+      selected_text: highlightTextToSave,
+      note: `[Highlight]: ${highlightTextToSave.slice(0, 80)}`,
+      source_location: { page: pageNumber, color },
+    })
+
+    setSaving(false)
+    if (saveError) console.warn('Highlight save notice:', saveError)
+
     setSelectedText('')
     window.getSelection()?.removeAllRanges()
     await loadWorkspace()
@@ -1096,21 +1129,84 @@ export function Reader() {
               </div>
             </Document>
 
-            {/* Floating Selection Tooltip (Bôi đen câu chữ) */}
+            {/* Persistent Highlight Overlay for Current Page */}
+            {annotations
+              .filter((item) => item.source_location?.page === pageNumber && item.selected_text)
+              .map((item) => {
+                const hlColor = (item.source_location as { color?: string })?.color || '#FACC15'
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      background: `${hlColor}25`,
+                      borderLeft: `4px solid ${hlColor}`,
+                      borderRadius: '0 8px 8px 0',
+                      padding: '8px 14px',
+                      margin: '10px 0',
+                      fontSize: '14px',
+                      fontFamily: 'var(--font-serif)',
+                      color: '#1A1C1B',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}
+                  >
+                    <span>“{item.selected_text}”</span>
+                    <button
+                      onClick={() => void deleteAnnotation(item.id)}
+                      style={{ border: 0, background: 'transparent', color: '#A4433F', cursor: 'pointer', opacity: 0.7, padding: '2px', flexShrink: 0 }}
+                      title="Xóa highlight này"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                )
+              })
+            }
+
+            {/* Floating Selection Tooltip (Bôi đen câu chữ & Chọn màu Highlight) */}
             {selectedText && !drawMode && (
-              <div className="selection-actions" style={{ background: '#00153C', color: '#FFFFFF', border: 0, boxShadow: '0 8px 30px rgba(0,0,0,0.25)' }}>
-                <Highlighter size={16} style={{ color: '#FAE100' }} />
-                <span style={{ fontSize: '12px', fontWeight: 600 }}>Đã bôi đen câu then chốt</span>
-                <button style={{ background: '#FAE100', color: '#504700', fontWeight: 700 }} onClick={() => void handleSaveNote()}>
-                  <Highlighter size={14} /> Tô màu
-                </button>
+              <div className="selection-actions" style={{ background: '#00153C', color: '#FFFFFF', border: 0, boxShadow: '0 8px 30px rgba(0,0,0,0.3)', padding: '10px 14px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Highlighter size={16} style={{ color: '#FAE100' }} />
+                  <span style={{ fontSize: '12px', fontWeight: 700 }}>Tô màu:</span>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    {[
+                      { color: '#FACC15', label: 'Vàng' },
+                      { color: '#38BDF8', label: 'Xanh dương' },
+                      { color: '#4ADE80', label: 'Xanh lá' },
+                      { color: '#F472B6', label: 'Hồng' },
+                      { color: '#FB923C', label: 'Cam' },
+                    ].map((item) => (
+                      <button
+                        key={item.color}
+                        onClick={() => void handleHighlightText(item.color)}
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          background: item.color,
+                          border: '2px solid #FFFFFF',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                          transition: 'transform 0.15s ease'
+                        }}
+                        title={`Tô màu ${item.label}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div style={{ height: '20px', width: '1px', background: 'rgba(255,255,255,0.2)' }} />
+
                 <button style={{ background: 'rgba(255,255,255,0.15)', color: '#FFF' }} onClick={() => void handleSaveNote()}>
                   <NotebookPen size={14} /> Ghi chú
                 </button>
                 <button style={{ background: 'rgba(255,255,255,0.15)', color: '#FFF' }} onClick={() => void handleInlineAskAi()}>
                   <Bot size={14} /> Hỏi đoạn này
                 </button>
-                <button style={{ background: 'transparent', color: '#FFF' }} onClick={() => setSelectedText('')}>
+                <button style={{ background: 'transparent', color: '#FFF', padding: '4px' }} onClick={() => setSelectedText('')}>
                   <X size={16} />
                 </button>
               </div>
@@ -1139,21 +1235,44 @@ export function Reader() {
 
         {/* Inline AI Popover Drawer */}
         {showInlineAi && (
-          <div className="inline-ai-popover" style={{ border: '1px solid var(--border-solid)', borderRadius: '14px', padding: '18px', boxShadow: '0 10px 40px rgba(0,0,0,0.15)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#00153C' }}>
-                <Bot size={18} /> {inlineAiQuery || 'AI Groq Giải thích ngữ cảnh'}
+          <div className="inline-ai-popover" style={{ border: '1px solid var(--border-solid)', borderRadius: '14px', padding: '18px', boxShadow: '0 10px 40px rgba(0,0,0,0.22)', background: '#FFFFFF' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '12px', borderBottom: '1px solid #E2E8F0', paddingBottom: '10px' }}>
+              <div style={{ flex: 1, minWidth: 0, fontWeight: 700, color: '#00153C', fontSize: '13px', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                <Bot size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: '-2px', color: '#00153C' }} />
+                {inlineAiQuery || 'AI Groq Giải thích ngữ cảnh'}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                 <button
+                  type="button"
                   style={{ border: 0, background: 'transparent', color: '#8A671F', fontSize: '11px', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
                   onClick={() => setShowGroqKeyModal((v) => !v)}
                   title="Cấu hình Groq API Key cá nhân"
                 >
                   ⚡ Groq Key
                 </button>
-                <button className="reader-icon-button" onClick={() => setShowInlineAi(false)}>
-                  <X size={16} />
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowInlineAi(false)
+                  }}
+                  style={{
+                    border: 0,
+                    background: '#F1F5F9',
+                    color: '#0F172A',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
+                    display: 'grid',
+                    placeItems: 'center',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                  }}
+                  title="Đóng cửa sổ AI"
+                >
+                  <X size={18} />
                 </button>
               </div>
             </div>
